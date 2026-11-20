@@ -1,0 +1,38 @@
+/* Бренд «Архивный след» (рабочее название) — токены для сайтов.
+   Подключение: <link rel="stylesheet" href="brand/tokens.css">
+   Шрифты лежат локально в brand/fonts (SIL OFL 1.1), без запросов к серверам Google.
+   При переносе на сайт копировать папку fonts вместе с tokens.css. */
+@font-face { font-family: 'Oswald'; src: url('fonts/Oswald-Variable.ttf') format('truetype');
+             font-weight: 200 700; font-display: swap; }
+@font-face { font-family: 'PT Sans'; src: url('fonts/PTSans-Regular.ttf') format('truetype');
+             font-weight: 400; font-display: swap; }
+@font-face { font-family: 'PT Sans'; src: url('fonts/PTSans-Bold.ttf') format('truetype');
+             font-weight: 700; font-display: swap; }
+
+:root {
+  /* Цвета — сняты с референсов (карусель «Раскулаченные: где искать документы») */
+  --paper:      #EFE9DD; /* фон: старая бумага */
+  --paper-deep: #E2D8C5; /* второй фон: плашки, подложки */
+  --kraft:      #C2A57A; /* картон папки «Дело», линии, рамки */
+  --ink:        #1E1A17; /* заголовки и основной текст */
+  --ink-soft:   #4A4440; /* второстепенный текст */
+  --bordo:      #6B1F1A; /* главный акцент: номерные плашки, кнопки, логотип */
+  --umber:      #5A3A24; /* второй акцент (коричневый кружок «2-я категория») */
+  --olive:      #3F4A2E; /* третий акцент (зелёный кружок «3-я категория») */
+
+  /* Шрифты */
+  --font-display: 'Oswald', 'Arial Narrow', sans-serif; /* заголовки, ПРОПИСНЫМИ */
+  --font-body:    'PT Sans', Arial, sans-serif;         /* основной текст */
+
+  /* Шкала размеров (≈1.25) */
+  --text-sm:  0.9rem;
+  --text-base: 1.125rem;  /* 18px — крупнее обычного: аудитория 50+ */
+  --text-lg:  1.4rem;
+  --text-xl:  1.9rem;
+  --text-2xl: 2.6rem;
+  --text-3xl: clamp(2.6rem, 7vw, 4.8rem);
+
+  --leading-body: 1.55;
+  --measure: 66ch;        /* длина строки */
+  --radius: 0;            /* углы прямые, как у документов */
+}

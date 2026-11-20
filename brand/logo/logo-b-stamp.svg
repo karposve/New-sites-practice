@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 170" width="400" height="170" role="img" aria-label="Архивный след — штамп">
+  <!-- Вариант Б: архивный штамп с полями «Фонд / Опись / Дело», как на обложке дела -->
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@600&amp;family=PT+Sans&amp;display=swap');
+    .name { font-family: Oswald, 'Arial Narrow', sans-serif; font-weight: 600; font-size: 44px; fill: #6B1F1A; }
+    .field { font-family: 'PT Sans', Arial, sans-serif; font-size: 17px; fill: #6B1F1A; }
+  </style>
+  <rect x="4" y="4" width="392" height="162" fill="none" stroke="#6B1F1A" stroke-width="4"/>
+  <rect x="13" y="13" width="374" height="144" fill="none" stroke="#6B1F1A" stroke-width="1.5"/>
+  <text class="name" x="200" y="74" text-anchor="middle">АРХИВНЫЙ СЛЕД</text>
+  <g class="field">
+    <text x="40" y="122">Фонд №</text>
+    <text x="155" y="122">Опись №</text>
+    <text x="275" y="122">Дело №</text>
+  </g>
+  <path d="M96 124h44M222 124h40M332 124h36" stroke="#6B1F1A" stroke-width="1.5"/>
+</svg>

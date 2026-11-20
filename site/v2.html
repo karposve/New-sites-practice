@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Архивный след — поиск предков по архивам бывшего СССР (версия 2)</title>
+<meta name="description" content="Найду документы о ваших предках в архивах бывшего СССР: метрические книги, списки раскулаченных, дела спецпереселенцев, военные архивы. В отчёте — копия каждого документа и его архивный шифр.">
+<link rel="icon" href="../brand/logo/mark.svg" type="image/svg+xml">
+<!-- Защита: странице разрешено грузить только свои файлы; форма никуда не отправляет данные -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="stylesheet" href="../brand/tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+         font-size: var(--text-base); line-height: var(--leading-body); }
+  img { max-width: 100%; }
+  a { color: var(--bordo); }
+  :focus-visible { outline: 3px solid var(--olive); outline-offset: 3px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+  p { margin: 0 0 1em; max-width: var(--measure); }
+  h1, h2, .display { font-family: var(--font-display); text-transform: uppercase; line-height: 1.04;
+                     letter-spacing: .005em; margin: 0; }
+
+  /* Черновик-баннер */
+  .draft { background: var(--ink); color: var(--paper-deep); font-size: var(--text-sm); text-align: center; padding: 6px 16px; }
+
+  /* Шапка */
+  header.top { border-bottom: 1px solid var(--kraft); }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 14px; padding-bottom: 14px; }
+  header.top img { height: 46px; width: auto; display: block; }
+  header nav { display: flex; gap: 22px; align-items: center; font-size: var(--text-sm); }
+  header nav a { color: var(--ink); text-decoration: none; }
+  header nav a:hover { color: var(--bordo); }
+  .btn { display: inline-block; background: var(--bordo); color: var(--paper); text-decoration: none; border: 0;
+         font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; letter-spacing: .03em;
+         padding: 13px 24px; cursor: pointer; }
+  .btn:hover { background: #561814; }
+  header nav .btn { padding: 9px 16px; font-size: 1rem; color: var(--paper); white-space: nowrap; }
+  @media (max-width: 760px) { header nav a:not(.btn) { display: none; } header.top img { height: 38px; } }
+
+  /* Первый экран */
+  .hero { padding: 56px 0 72px; }
+  .hero .wrap { display: grid; grid-template-columns: 1fr 1.15fr; gap: 48px; align-items: center; }
+  .hero h1 { font-size: var(--text-3xl); font-weight: 700; }
+  .hero .sub { font-size: var(--text-lg); color: var(--ink-soft); margin: 22px 0 28px; line-height: 1.45; }
+  .hero .actions { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+  .hero .actions a.link { color: var(--ink); }
+  @media (max-width: 900px) { .hero .wrap { grid-template-columns: 1fr; gap: 36px; } .hero { padding-top: 36px; } }
+
+  /* Метрическая книга */
+  .stage { position: relative; }
+  .book { position: relative; display: grid; grid-template-columns: 1fr 1fr; perspective: 2200px;
+          background: var(--umber); padding: 10px; box-shadow: 0 18px 40px -22px #3a2416; }
+  .page { position: relative; background: #F4EEDF; border: 1px solid #d8c8a6; padding: 16px 14px;
+          font-size: 11px; line-height: 1.3; color: #3b2f2a; min-height: 330px; overflow: hidden; }
+  .page.left { border-right: 0; box-shadow: inset -14px 0 18px -16px #6b5638; }
+  .page.right { border-left: 0; box-shadow: inset 14px 0 18px -16px #6b5638; }
+  .title-block { text-align: center; padding: 8px 0 12px; border-bottom: 1px solid #c9b48f; margin-bottom: 8px; }
+  .title-block .arms { display: block; width: 47px; height: 57px; margin: 0 auto 6px; filter: grayscale(1) contrast(1.35) brightness(.8); mix-blend-mode: multiply; opacity: .9; }
+  .seal { position: absolute; right: 10px; bottom: 6px; width: 92px; height: 92px; color: var(--bordo);
+          opacity: .62; transform: rotate(-11deg); mix-blend-mode: multiply; pointer-events: none; z-index: 2; }
+  @media (max-width: 520px) { .title-block .arms { width: 34px; height: 41px; } .seal { width: 64px; height: 64px; } }
+  .title-block b { display: block; font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: .06em; color: #2a211c; }
+  .title-block span { display: block; margin-top: 3px; }
+  .grid-head, .row { display: grid; grid-template-columns: 1.6em 3.6em 1fr 1.9fr; gap: 6px; align-items: center; }
+  .grid-head { font-size: 9.5px; color: #6a5a48; border-bottom: 1px solid #c9b48f; padding-bottom: 4px; margin-bottom: 2px; }
+  .row { min-height: 31px; border-bottom: 1px solid #e3d5b8; position: relative; z-index: 1; }
+  .row svg { display: block; width: 100%; height: 18px; overflow: visible; }
+  .row .n { font-size: 10px; color: #6a5a48; }
+  .row.found .txt { font-size: 10.5px; font-style: italic; color: #2a211c; line-height: 1.25; }
+  .row.found.hit { color: var(--bordo); }
+  .row.found.hit .txt { color: var(--bordo); }
+  .flip { position: absolute; top: 10px; right: 10px; width: calc(50% - 10px); height: calc(100% - 20px);
+          transform-origin: left center; transform: rotateY(0); backface-visibility: hidden;
+          background: #F4EEDF; border: 1px solid #d8c8a6; border-left: 0; padding: 16px 14px; overflow: hidden;
+          transition: transform 1s cubic-bezier(.55,.06,.3,1); z-index: 5; }
+  .flip::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #6b563826, transparent 30%);
+                 opacity: 0; transition: opacity 1s; pointer-events: none; }
+  .flip.turned { transform: rotateY(-180deg); }
+  .flip.turned::after { opacity: 1; }
+  .scan { position: absolute; left: 0; right: 0; height: 31px; background: #6B1F1A1c;
+          border-top: 1.5px solid #6B1F1A99; border-bottom: 1.5px solid #6B1F1A99;
+          opacity: 0; transition: top .45s ease-in-out, opacity .3s; z-index: 0; pointer-events: none; }
+  .scan.on { opacity: 1; }
+  .scan.hit { background: #6B1F1A2e; }
+  .cite-tag { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; margin-top: 16px;
+              border-left: 2px solid var(--bordo); padding: 8px 0 8px 14px;
+              opacity: 0; transform: translateY(6px); transition: opacity .6s, transform .6s; }
+  .cite-tag.show { opacity: 1; transform: none; }
+  .cite-tag b { font-family: var(--font-display); font-weight: 600; text-transform: uppercase; color: var(--bordo); letter-spacing: .03em; }
+  .cite-tag span { color: var(--ink-soft); font-size: var(--text-sm); }
+  .replay { background: none; border: 0; padding: 0; color: var(--ink-soft); font: inherit; font-size: var(--text-sm);
+            text-decoration: underline; cursor: pointer; margin-left: auto; }
+  .stage figcaption { font-size: var(--text-sm); color: var(--ink-soft); margin-top: 8px; }
+  @media (max-width: 520px) {
+    .page, .flip { padding: 10px 8px; font-size: 9px; min-height: 270px; }
+    .grid-head, .row { grid-template-columns: 1.2em 2.6em 1fr; }
+    .grid-head .c4, .row > :nth-child(4) { display: none; }
+    .row.found .txt { font-size: 9px; }
+    .title-block b { font-size: 12px; }
+  }
+
+  /* Разделы с ярлыком папки */
+  section.block { padding: 64px 0; }
+  .tab { border-bottom: 4px solid var(--kraft); margin-bottom: 32px; }
+  .tab h2 { display: inline-block; font-size: var(--text-xl); font-weight: 600; background: var(--kraft); color: var(--ink);
+            padding: .4em 1.6em .3em .7em; clip-path: polygon(0 0, calc(100% - 1em) 0, 100% 100%, 0 100%); }
+  .intro { color: var(--ink-soft); margin-bottom: 28px; }
+
+  /* Книга учёта со строкой шифра */
+  .ledger { border-top: 1px solid var(--kraft); }
+  .ledger.two { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; border-top: 0; }
+  .ledger.two .item:nth-child(-n+2) { border-top: 1px solid var(--kraft); }
+  @media (max-width: 760px) { .ledger.two { grid-template-columns: 1fr; } .ledger.two .item:nth-child(2) { border-top: 0; } }
+  .item { padding: 16px 0 16px 18px; border-bottom: 1px solid var(--kraft); border-left: 2px solid var(--bordo); }
+  .item h3 { font-size: var(--text-base); margin: 0; }
+  .item p { margin: 3px 0 0; color: var(--ink-soft); }
+  .item .cite { color: var(--bordo); font-size: var(--text-sm); margin-top: 7px; }
+
+  /* Шаги */
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; counter-reset: s; }
+  .steps li { counter-increment: s; border-top: 1px solid var(--kraft); padding-top: 14px; }
+  .steps li::before { content: counter(s); display: block; font-family: var(--font-display); font-weight: 700;
+                      font-size: 3.2rem; line-height: 1; color: var(--kraft); margin-bottom: 10px; }
+  .steps h3 { margin: 0 0 6px; font-size: var(--text-base); }
+  .steps p { color: var(--ink-soft); margin: 0; }
+  .steps .when { display: block; margin-top: 8px; font-size: var(--text-sm); color: var(--bordo); }
+  @media (max-width: 900px) { .steps { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Пример отчёта */
+  .report { display: grid; grid-template-columns: 1fr 1.3fr; gap: 48px; align-items: start; }
+  .sheet { background: #F7F2E6; border: 1px solid var(--kraft); padding: 28px 28px 20px; box-shadow: 8px 8px 0 var(--paper-deep); }
+  .sheet .who { font-family: var(--font-display); font-weight: 600; text-transform: uppercase; font-size: var(--text-lg); margin: 0 0 2px; }
+  .sheet .life { color: var(--ink-soft); margin-bottom: 14px; }
+  .sheet .item { border-left-width: 2px; }
+  .sheet .note { font-size: var(--text-sm); color: var(--ink-soft); margin: 16px 0 0; }
+  @media (max-width: 860px) { .report { grid-template-columns: 1fr; gap: 28px; } }
+
+  /* Цены */
+  .prices .item { display: grid; grid-template-columns: 1fr auto; gap: 8px 32px; align-items: baseline; }
+  .prices .price { font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); white-space: nowrap; }
+  .prices .item p, .prices .item .cite { grid-column: 1 / -1; }
+  .fine { font-size: var(--text-sm); color: var(--ink-soft); margin-top: 16px; }
+
+  /* Об авторе */
+  .about { display: grid; grid-template-columns: 220px 1fr; gap: 40px; align-items: start; }
+  .portrait { aspect-ratio: 4/5; background: var(--paper-deep); border: 1px dashed var(--kraft); display: grid; place-items: center;
+              color: var(--ink-soft); font-size: var(--text-sm); text-align: center; padding: 12px; }
+  @media (max-width: 640px) { .about { grid-template-columns: 1fr; } .portrait { max-width: 200px; } }
+
+  /* Вопросы */
+  details { border-bottom: 1px solid var(--kraft); padding: 14px 0; }
+  details:first-of-type { border-top: 1px solid var(--kraft); }
+  summary { cursor: pointer; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-family: var(--font-display); color: var(--bordo); font-size: 1.4rem; line-height: 1; }
+  details[open] summary::after { content: "−"; }
+  details p { margin: 10px 0 0; color: var(--ink-soft); }
+
+  /* Заявка */
+  .order { background: var(--paper-deep); border-top: 4px solid var(--kraft); }
+  .order .wrap { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; }
+  .order h2 { font-size: var(--text-2xl); font-weight: 700; margin-bottom: 16px; }
+  form { display: grid; gap: 16px; }
+  label { display: grid; gap: 6px; font-weight: 700; font-size: var(--text-sm); }
+  label small { font-weight: 400; color: var(--ink-soft); }
+  input, textarea { font: inherit; font-size: var(--text-base); color: var(--ink); background: var(--paper);
+                    border: 1px solid var(--kraft); border-radius: 0; padding: 11px 12px; }
+  textarea { min-height: 140px; resize: vertical; }
+  .status { min-height: 1.5em; color: var(--olive); font-weight: 700; margin: 0; }
+  @media (max-width: 860px) { .order .wrap { grid-template-columns: 1fr; gap: 24px; } }
+
+  footer { padding: 32px 0 48px; font-size: var(--text-sm); color: var(--ink-soft); }
+  footer .wrap { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+  footer img { width: 36px; height: 36px; vertical-align: middle; margin-right: 10px; }
+
+  /* ===== Версия 2: книга, которая открывается при прокрутке ===== */
+  .x-hero { height: 430vh; position: relative; }
+  .x-sticky { position: sticky; top: 0; height: 100vh; overflow: hidden;
+              background: radial-gradient(120% 80% at 55% 35%, #F6F1E6 0%, var(--paper) 55%, #E6DCC8 100%); }
+  .x-floor { position: absolute; left: 0; right: 0; bottom: 0; height: 34%;
+             background: linear-gradient(180deg, #E2D6BF00 0%, #DCCFB6 40%, #D3C4A8 100%); }
+  .x-hero { --W: min(290px, 43vw); --H: calc(var(--W) * 1.4); }
+  @media (min-width: 900px) { .x-hero { --cx: 61%; } }
+
+  .x-title { position: absolute; left: 16px; top: 4vh; z-index: 1; margin: 0;
+             font-family: var(--font-display); font-weight: 700; text-transform: uppercase;
+             font-size: clamp(2.4rem, 6vw, 5.6rem); line-height: .98; max-width: 10ch; color: var(--ink); }
+  .x-lead { position: absolute; left: 16px; bottom: 5vh; z-index: 6; max-width: 34ch; }
+  .x-lead p { color: var(--ink-soft); font-size: var(--text-base); margin: 0 0 14px; }
+  .x-found-title { position: absolute; left: 16px; top: 4vh; z-index: 6; margin: 0; opacity: 0;
+                   font-family: var(--font-display); font-weight: 600; text-transform: uppercase;
+                   font-size: clamp(1.6rem, 4vw, 3rem); line-height: 1; color: var(--ink); max-width: 16ch;
+                   background: var(--paper); padding: 14px 18px 12px; border-left: 4px solid var(--bordo); box-shadow: 0 10px 24px -16px #3a2416; }
+  @media (min-width: 1152px) { .x-title, .x-lead, .x-found-title { left: calc((100vw - 1120px) / 2 + 16px); } }
+
+  .x-scene { position: absolute; inset: 0; perspective: 1700px; perspective-origin: 50% 40%; z-index: 3; pointer-events: none; }
+  .x-cam { position: absolute; inset: 0; transform-origin: 0 0; will-change: transform; }
+  .x-book { position: absolute; left: calc(var(--cx, 50%) - var(--W)); top: calc(54% - var(--H) / 2);
+            width: calc(var(--W) * 2); height: var(--H); transform-style: preserve-3d;
+            transform: translateX(calc(var(--W) * -0.5 * (1 - var(--open, 0)))) rotateX(var(--tilt, 18deg));
+            font-size: calc(var(--W) / 25); }
+  .x-book::after { content: ""; position: absolute; left: 4%; right: 4%; bottom: -7%; height: 10%;
+                   background: radial-gradient(50% 50% at 50% 50%, #3a241640, transparent 70%);
+                   transform: translateZ(-20px); }
+
+  .x-paper { background: #F4EEDF; color: #3b2f2a; padding: 7% 6%; box-sizing: border-box; }
+  .x-base-left, .x-target { position: absolute; top: 0; width: var(--W); height: var(--H); }
+  .x-base-left { left: 0; transform: translateZ(-1px); background: #E9DFC9;
+                 box-shadow: inset -10px 0 16px -12px #6b5638; }
+  .x-target { left: var(--W); transform: translateZ(0); box-shadow: inset 12px 0 18px -14px #6b5638; }
+  .x-target, .x-face { border: 1px solid #d8c8a6; }
+
+  .x-leaf { position: absolute; top: 0; left: var(--W); width: var(--W); height: var(--H);
+            transform-origin: left center; transform-style: preserve-3d;
+            transform: rotateY(calc(var(--turn, 0) * -180deg)) translateZ(calc(var(--z) * 1px)); }
+  .x-face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; }
+  .x-front { box-shadow: inset 12px 0 18px -14px #6b5638; }
+  .x-back { transform: rotateY(180deg); box-shadow: inset -12px 0 18px -14px #6b5638; }
+
+  .x-head, .x-row { display: grid; grid-template-columns: 1.7em 3.4em 1fr 1.9fr; gap: .45em; align-items: center; }
+  .x-head { font-size: .85em; color: #6a5a48; border-bottom: 1px solid #c9b48f; padding-bottom: .35em; line-height: 1.15; }
+  .x-row { min-height: 2.6em; border-bottom: 1px solid #e3d5b8; position: relative; z-index: 1; }
+  .x-row svg { display: block; width: 100%; height: 1.5em; overflow: visible; }
+  .x-row .n { font-size: .9em; color: #6a5a48; }
+  .x-row .t { font-style: italic; font-size: .9em; line-height: 1.2; color: #2a211c; }
+  .x-row.hit .t, .x-row.hit .n { color: var(--bordo); }
+  .x-rows { position: relative; }
+  .x-scan { position: absolute; left: -2%; right: -2%; height: 2.6em; top: 0; opacity: 0; z-index: 0;
+            background: #6B1F1A24; border-top: 1.5px solid #6B1F1A99; border-bottom: 1.5px solid #6B1F1A99; }
+  .x-seal { position: absolute; right: 5%; bottom: 3%; width: 30%; color: var(--bordo); opacity: .6;
+            transform: rotate(-11deg); mix-blend-mode: multiply; }
+
+  .x-titlepage { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .35em; padding-top: 16%; font-size: 1.05em; }
+  .x-titlepage .x-arms { width: 34%; filter: grayscale(1) contrast(1.35) brightness(.8); mix-blend-mode: multiply; margin-bottom: .6em; }
+  .x-titlepage b { font-family: var(--font-display); font-weight: 600; font-size: 1.45em; letter-spacing: .06em; color: #2a211c; }
+  .x-titlepage i { margin-top: .8em; }
+
+  .x-leather { background:
+      radial-gradient(120% 90% at 30% 20%, #6d4a30 0%, #4f321f 55%, #3b2416 100%);
+      color: var(--kraft); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .7em;
+      border: 0; box-shadow: inset 10px 0 14px -8px #00000080, inset 0 0 0 .9em #00000014; }
+  .x-leather::before { content: ""; position: absolute; inset: 6%; border: 2px solid #c2a57a88; outline: 1px solid #c2a57a55; outline-offset: 4px; }
+  .x-emboss { width: 46%; aspect-ratio: 470 / 568; background: #C9AE7E;
+              -webkit-mask: url(img/lesser-coat-of-arms-russian-empire.svg) center / contain no-repeat;
+              mask: url(img/lesser-coat-of-arms-russian-empire.svg) center / contain no-repeat;
+              filter: drop-shadow(0 1px 0 #00000066); }
+  .x-leather b { font-family: var(--font-display); font-weight: 600; font-size: 1.7em; letter-spacing: .12em; text-align: center; line-height: 1.1; }
+  .x-leather span { font-family: var(--font-display); font-size: 1.3em; letter-spacing: .2em; }
+  .x-endpaper { background: repeating-linear-gradient(45deg, #e6dcc6 0 6px, #e1d5bc 6px 12px); }
+  .x-label { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); background: #F4EEDF; border: 1px solid #b89b6c;
+             padding: .7em 1.2em; font-size: 1.05em; line-height: 1.45; text-align: center; color: #3b2f2a; font-family: var(--font-body); }
+
+  .x-hint { position: absolute; left: calc(var(--cx, 50%) + var(--W) * .18); top: calc(54% + var(--H) * .12); z-index: 7;
+            width: 104px; height: 104px; color: var(--paper); display: grid; place-items: center; pointer-events: none; }
+  .x-hint svg { position: absolute; inset: 0; animation: x-spin 14s linear infinite; }
+  .x-hint span { font-family: var(--font-display); font-size: 1.4rem; }
+  @keyframes x-spin { to { transform: rotate(360deg); } }
+
+  .x-cards { position: absolute; left: 50%; bottom: 4vh; transform: translateX(-50%); z-index: 8;
+             width: min(1088px, calc(100% - 32px)); display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .x-card { position: relative; background: #FBF7EE; border: 1px solid var(--kraft); border-top: 3px solid var(--bordo);
+            padding: 14px 16px 30px; opacity: 0; transform: translateY(40px); box-shadow: 0 10px 24px -18px #3a2416; }
+  .x-card::after { content: ""; position: absolute; left: 50%; bottom: 10px; width: 12px; height: 12px; margin-left: -6px;
+                   border-radius: 50%; background: var(--paper); box-shadow: inset 0 1px 2px #6b563880; }
+  .x-card h3 { margin: 0 0 4px; font-size: var(--text-base); }
+  .x-card p { margin: 0; font-size: var(--text-sm); color: var(--ink-soft); line-height: 1.4; }
+  .x-note { position: absolute; right: 16px; top: 4vh; background: var(--paper); padding: 4px 8px; margin: 0; font-size: var(--text-sm); color: var(--ink-soft); opacity: 0; z-index: 8; }
+
+  @media (max-width: 760px) {
+    .x-hero { --W: min(220px, 44vw); }
+    .x-book { top: calc(50% - var(--H) / 2); }
+    .x-lead p { font-size: var(--text-sm); }
+    .x-cards { grid-template-columns: 1fr 1fr; gap: 8px; bottom: 2vh; }
+    .x-card { padding: 10px 10px 24px; }
+    .x-card h3 { font-size: .95rem; }
+    .x-card p { font-size: .8rem; }
+    .x-hint { width: 84px; height: 84px; }
+    .x-note { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .x-hint svg { animation: none; }
+  }
+</style>
+</head>
+<body>
+<!-- Фильтр для печати: делает герб одноцветным бордовым оттиском (тёмное — плотнее, светлое — прозрачнее) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="stamp-ink" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.12  0 0 0 0 0.10  -0.5 -0.5 -0.3 1.2 0"/>
+    </filter>
+  </defs>
+</svg>
+<div class="draft">Черновик сайта, версия 2. Цены, сроки и контакты пока заглушки. <a href="index.html" style="color:inherit">Открыть версию 1</a></div>
+
+<header class="top">
+  <div class="wrap">
+    <a href="#"><img src="../brand/logo/logo-a-outlined.svg" alt="Архивный след — поиск предков по архивам бывшего СССР"></a>
+    <nav aria-label="Разделы">
+      <a href="#find">Что можно найти</a>
+      <a href="#how">Как проходит поиск</a>
+      <a href="#prices">Цены</a>
+      <a href="#faq">Вопросы</a>
+      <a class="btn" href="#order">Оставить заявку</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="x-hero" id="xhero" aria-label="Метрическая книга: прокрутите, чтобы открыть">
+  <div class="x-sticky">
+    <div class="x-floor" aria-hidden="true"></div>
+
+    <h1 class="x-title" id="xtitle">Найду документы о&nbsp;ваших предках</h1>
+    <div class="x-lead" id="xlead">
+      <p>Метрические книги, списки раскулаченных, дела спецпереселенцев и военные архивы бывшего СССР. Копия каждого документа и его точный адрес в архиве.</p>
+      <a class="btn" href="#order">Оставить заявку</a>
+    </div>
+    <p class="x-found-title" id="xfoundtitle">Лист 112 об.: запись о&nbsp;крещении</p>
+
+    <div class="x-scene">
+      <div class="x-cam" id="xcam">
+        <div class="x-book" id="xbook">
+          <!-- правая страница с находкой -->
+          <div class="x-target x-paper" id="xtarget">
+            <div class="x-head"><span>№</span><span>Мѣсяцъ и день</span><span>Имя</span><span>Родители</span></div>
+            <div class="x-rows" id="xrows"><div class="x-scan" id="xscan"></div></div>
+            <svg class="x-seal" id="xseal" viewBox="0 0 120 120" aria-hidden="true">
+              <defs><path id="x-seal-ring" d="M60 60 m-44 0 a44 44 0 1 1 88 0 a44 44 0 1 1 -88 0"/></defs>
+              <circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="2.5"/>
+              <circle cx="60" cy="60" r="35" fill="none" stroke="currentColor" stroke-width="1.2"/>
+              <text font-size="10.5" letter-spacing="1.2" fill="currentColor" font-family="PT Sans, Arial, sans-serif"><textPath href="#x-seal-ring" startOffset="2%">САМАРСКАЯ ДУХОВНАЯ КОНСИСТОРIЯ ✠</textPath></text>
+              <image href="img/lesser-coat-of-arms-russian-empire.svg" x="38" y="32" width="44" height="53" filter="url(#stamp-ink)"/>
+            </svg>
+          </div>
+          <!-- листы, которые перелистываются (сверху вниз: 1, 2, 3) -->
+          <div class="x-leaf" style="--z:3" data-leaf="0">
+            <div class="x-face x-front x-paper x-titlepage">
+              <img src="img/lesser-coat-of-arms-russian-empire.svg" alt="" class="x-arms">
+              <b>МЕТРИЧЕСКАЯ КНИГА</b>
+              <span>Покровской церкви села Покровскаго</span>
+              <span>Новоузенскаго уѣзда Самарской губернiи</span>
+              <span>на 1911 годъ</span>
+              <i>Часть первая: о родившихся</i>
+            </div>
+            <div class="x-face x-back x-paper"><div class="x-rows" data-rows="11" data-start="1"></div></div>
+          </div>
+          <div class="x-leaf" style="--z:2" data-leaf="1">
+            <div class="x-face x-front x-paper"><div class="x-head"><span>№</span><span>Мѣсяцъ и день</span><span>Имя</span><span>Родители</span></div><div class="x-rows" data-rows="10" data-start="12"></div></div>
+            <div class="x-face x-back x-paper"><div class="x-rows" data-rows="11" data-start="22"></div></div>
+          </div>
+          <div class="x-leaf" style="--z:1" data-leaf="2">
+            <div class="x-face x-front x-paper"><div class="x-head"><span>№</span><span>Мѣсяцъ и день</span><span>Имя</span><span>Родители</span></div><div class="x-rows" data-rows="10" data-start="33"></div></div>
+            <div class="x-face x-back x-paper"><div class="x-rows" data-rows="11" data-start="63"></div></div>
+          </div>
+          <!-- обложка -->
+          <div class="x-leaf x-cover" style="--z:4" data-leaf="cover">
+            <div class="x-face x-front x-leather">
+              <div class="x-emboss"></div>
+              <b>МЕТРИЧЕСКАЯ<br>КНИГА</b>
+              <span>1911</span>
+            </div>
+            <div class="x-face x-back x-endpaper">
+              <div class="x-label">ЦГАСО<br>Ф. 32 &nbsp;Оп. 36<br>Д. 218</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="x-hint" id="xhint" aria-hidden="true">
+      <svg viewBox="0 0 100 100"><defs><path id="x-hint-ring" d="M50 50 m-38 0 a38 38 0 1 1 76 0 a38 38 0 1 1 -76 0"/></defs>
+        <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width=".8" stroke-dasharray="2 3"/>
+        <text font-size="9.5" letter-spacing="2" fill="currentColor" font-family="PT Sans, Arial, sans-serif"><textPath href="#x-hint-ring">листайте вниз ✠ листайте вниз ✠</textPath></text>
+      </svg>
+      <span>↓</span>
+    </div>
+
+    <div class="x-cards" id="xcards">
+      <article class="x-card"><h3>Шифр</h3><p>ЦГАСО, ф. 32, оп. 36, д. 218, л. 112 об.</p></article>
+      <article class="x-card"><h3>Родился</h3><p>Иоанн, 14 мая 1911, село Покровское Самарской губернии</p></article>
+      <article class="x-card"><h3>Родители</h3><p>Крестьянин Степан Иванович Лаврентьев и Мария Васильевна</p></article>
+      <article class="x-card"><h3>Что искать дальше</h3><p>Венчание родителей около 1909 года в той же церкви</p></article>
+    </div>
+    <p class="x-note" id="xnote">Пример: имена и шифр выдуманы.</p>
+  </div>
+</section>
+
+  <section class="block" id="find">
+    <div class="wrap">
+      <div class="tab"><h2>Что можно найти</h2></div>
+      <p class="intro">Большая часть документов о простых семьях XX века сохранилась. Вопрос в том, в каком архиве они лежат и кому их выдадут.</p>
+      <div class="ledger two">
+        <div class="item"><h3>Рождение, брак, смерть до 1918 года</h3><p>Метрические книги церквей: имена родителей, крёстных, село и сословие.</p><p class="cite">Областные архивы, фонды духовных консисторий</p></div>
+        <div class="item"><h3>Раскулачивание и высылка</h3><p>Списки раскулаченных по сельсоветам, акты описи имущества, решения исполкомов.</p><p class="cite">Областные архивы, фонды райисполкомов 1929–1933</p></div>
+        <div class="item"><h3>Жизнь в спецпоселении</h3><p>Учётные карточки спецпереселенцев: состав семьи, перемещения, дата снятия с учёта.</p><p class="cite">Информационные центры МВД по месту ссылки</p></div>
+        <div class="item"><h3>Арест и следственное дело</h3><p>Если предок был осуждён, дело хранится в архиве ФСБ или передано в областной архив.</p><p class="cite">Архивы УФСБ, часть дел — в госархивах регионов</p></div>
+        <div class="item"><h3>Война 1941–1945</h3><p>Призыв, награды, ранения, гибель или возвращение домой.</p><p class="cite">Онлайн-базы Минобороны и ЦАМО</p></div>
+        <div class="item"><h3>Ревизские сказки и переписи</h3><p>Состав крестьянских семей в XVIII–XIX веках, если линию удаётся продолжить в глубину.</p><p class="cite">Областные архивы, фонды казённых палат</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="how">
+    <div class="wrap">
+      <div class="tab"><h2>Как проходит поиск</h2></div>
+      <ol class="steps">
+        <li><h3>Вы рассказываете, что знаете</h3><p>Имена, годы, сёла, семейные истории. Даже обрывки помогают выбрать архив.</p><span class="when">Бесплатный разговор, 30 минут</span></li>
+        <li><h3>Я проверяю открытые базы</h3><p>Оцифрованные метрики, базы жертв репрессий, военные базы, книги памяти.</p><span class="when">5–10 дней</span></li>
+        <li><h3>Готовлю запросы в архивы</h3><p>Часть документов выдают только родственникам. Я пишу запросы, вы их подписываете и отправляете.</p><span class="when">Ответ архива — до 30 дней</span></li>
+        <li><h3>Вы получаете отчёт</h3><p>Личная страница или PDF: что найдено, копии документов, шифры и что искать дальше.</p><span class="when">После ответов архивов</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="block" id="report">
+    <div class="wrap report">
+      <div>
+        <div class="tab"><h2>Пример отчёта</h2></div>
+        <p>У каждой находки есть шифр: название архива, номер фонда, описи, дела и листа. По нему вы или любой исследователь заново найдёте этот документ.</p>
+        <p>Если что-то не нашлось, в отчёте сказано, где искали и куда можно обратиться дальше.</p>
+      </div>
+      <article class="sheet" aria-label="Фрагмент отчёта">
+        <p class="who">Лаврентьев Степан Иванович</p>
+        <p class="life">ок. 1886, с. Покровское Самарской губ. — после 1940</p>
+        <div class="ledger">
+          <div class="item"><h3>Венчание, 1909</h3><p>С Марией Васильевной Ковалёвой, крестьянской девицей того же села.</p><p class="cite">ЦГАСО, ф. 32, оп. 36, д. 201, л. 87 об.</p></div>
+          <div class="item"><h3>Раскулачен, 1930</h3><p>Отнесён ко второй категории, хозяйство передано колхозу «Красный пахарь».</p><p class="cite">ГАСО, ф. Р-2475, оп. 1, д. 14, л. 33</p></div>
+          <div class="item"><h3>Спецпоселение, 1930–1940</h3><p>Выслан с семьёй из пяти человек в Котласский район Северного края.</p><p class="cite">ИЦ УМВД по Архангельской обл., ответ на запрос</p></div>
+        </div>
+        <p class="note">Все имена и шифры в примере выдуманы.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="block" id="prices">
+    <div class="wrap">
+      <div class="tab"><h2>Цены</h2></div>
+      <div class="ledger prices">
+        <div class="item"><h3>Первый шаг</h3><span class="price">4 900 ₽</span><p>Проверка открытых баз по одному человеку и план: какие архивы и запросы нужны.</p><p class="cite">Срок 7 дней</p></div>
+        <div class="item"><h3>Одна линия рода</h3><span class="price">14 900 ₽</span><p>Поиск по одной фамилии на 3–4 поколения вглубь, тексты запросов в архивы, отчёт с копиями.</p><p class="cite">Срок 4–8 недель, включая ответы архивов</p></div>
+        <div class="item"><h3>Родословная семьи</h3><span class="price">от 35 000 ₽</span><p>Несколько линий, древо в формате GEDCOM, личная страница семьи со всеми документами.</p><p class="cite">Срок от 2 месяцев</p></div>
+      </div>
+      <p class="fine">Архивы берут свою плату за копии и справки, обычно до 1 500 ₽ за документ. Её вы оплачиваете архиву напрямую.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap about">
+      <div class="portrait">Здесь будет фотография</div>
+      <div>
+        <div class="tab"><h2>Кто ищет</h2></div>
+        <p>Меня зовут Светлана. Я начала с поиска собственной семьи: прадеда, высланного на Север в 1930 году, и деда, вернувшегося с войны. За это время научилась читать дореволюционные метрики, разбираться в архивных фондах и писать запросы, на которые архивы отвечают по существу.</p>
+        <p>Работаю удалённо, с семьями из любой страны.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="faq">
+    <div class="wrap">
+      <div class="tab"><h2>Вопросы</h2></div>
+      <details><summary>Что, если я почти ничего не знаю о предках?</summary><p>Достаточно одного имени с примерным годом рождения и области. Часто остальное находится в документах родителей или в семейных справках.</p></details>
+      <details><summary>Почему запросы в архив отправляю я, а не вы?</summary><p>Многие архивы выдают документы о репрессированных только родственникам. Я готовлю текст запроса и список приложений, вам остаётся подписать и отправить.</p></details>
+      <details><summary>Можно ли найти документы, если село исчезло?</summary><p>Да. Документы хранятся по старому административному делению: уезду и губернии. Я определяю, в какой архив перешли фонды.</p></details>
+      <details><summary>Вы передаёте мои данные куда-то ещё?</summary><p>Нет. Сведения о живых родственниках для поиска не нужны, я их не собираю и не ввожу в онлайн-базы.</p></details>
+      <details><summary>Что если ничего не найдётся?</summary><p>В отчёте будет список проверенных источников и следующий шаг. Если открытые базы пусты, «Первый шаг» всё равно даёт план поиска.</p></details>
+    </div>
+  </section>
+
+  <section class="block order" id="order">
+    <div class="wrap">
+      <div>
+        <h2>Расскажите о своей семье</h2>
+        <p>Я отвечу в течение двух дней и скажу, с какого архива стоит начать.</p>
+        <p class="fine">Telegram и почта появятся при запуске сайта.</p>
+      </div>
+      <form id="form" novalidate>
+        <label>Как к вам обращаться<input name="name" autocomplete="given-name" required></label>
+        <label>Телефон или Telegram<input name="contact" required></label>
+        <label>Что вы знаете о предках <small>Имена, годы, сёла, истории. Сведения о живых родственниках не нужны.</small><textarea name="about"></textarea></label>
+        <div><button class="btn" type="submit">Отправить заявку</button></div>
+        <p class="status" id="status" role="status"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span><img src="../brand/logo/mark.svg" alt="">Архивный след, 2026</span>
+    <span>Самозанятая, ИНН 000000000000 (заглушка)</span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // ---------- Рукописные строки ----------
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  function scribble(W, fill) {
+    const w = W * fill; let d = `M0 ${rnd(10,12).toFixed(1)}`; let x = 0;
+    while (x < w) {
+      const step = rnd(4.5, 8), up = rnd(4, 8.5), down = rnd(1.5, 3.5);
+      d += ` c${(step*.25).toFixed(1)} ${(-up).toFixed(1)} ${(step*.75).toFixed(1)} ${(-up).toFixed(1)} ${(step*.55).toFixed(1)} 0`;
+      d += ` c${(step*.1).toFixed(1)} ${down.toFixed(1)} ${(step*.45).toFixed(1)} ${down.toFixed(1)} ${(step*.45).toFixed(1)} 0`;
+      x += step;
+      if (Math.random() < .16) { const g = rnd(4, 8); x += g; d += ` m${g.toFixed(1)} 0`; }
+    }
+    return `<svg viewBox="0 0 ${W} 18" preserveAspectRatio="xMinYMid meet" aria-hidden="true"><path d="${d}" fill="none" stroke="#3b2f2a" stroke-opacity=".8" stroke-width="1.15"/></svg>`;
+  }
+  const row = n => `<div class="x-row"><span class="n">${n}</span>${scribble(38, rnd(.55,.85))}${scribble(42, rnd(.6,.95))}${scribble(80, rnd(.75,.98))}</div>`;
+  document.querySelectorAll('.x-rows[data-rows]').forEach(el => {
+    let h = ''; for (let i = 0; i < +el.dataset.rows; i++) h += row(+el.dataset.start + i); el.insertAdjacentHTML('beforeend', h);
+  });
+  const xrows = document.getElementById('xrows');
+  const TARGET = 6; let h = '';
+  for (let i = 0; i < 10; i++) {
+    const n = 74 + i;
+    h += i === TARGET
+      ? `<div class="x-row" id="xfound"><span class="n">${n}</span><span class="t">14 мая</span><span class="t">Iоаннъ</span><span class="t">Крест. Степанъ Ивановъ Лаврентьевъ и жена его Марiя Васильевна</span></div>`
+      : row(n);
+  }
+  xrows.insertAdjacentHTML('beforeend', h);
+
+  // ---------- Сцена, управляемая прокруткой ----------
+  const hero = document.getElementById('xhero');
+  const book = document.getElementById('xbook');
+  const cam = document.getElementById('xcam');
+  const target = document.getElementById('xtarget');
+  const found = document.getElementById('xfound');
+  const scan = document.getElementById('xscan');
+  const rowsEls = [...xrows.querySelectorAll('.x-row')];
+  const leaves = [...document.querySelectorAll('.x-leaf')];
+  const cover = leaves.find(l => l.dataset.leaf === 'cover');
+  const pages = leaves.filter(l => l.dataset.leaf !== 'cover').sort((a, b) => a.dataset.leaf - b.dataset.leaf);
+  const $ = id => document.getElementById(id);
+  const title = $('xtitle'), lead = $('xlead'), hint = $('xhint'), ftitle = $('xfoundtitle'), note = $('xnote');
+  const cards = [...document.querySelectorAll('.x-card')];
+
+  const clamp = v => Math.max(0, Math.min(1, v));
+  const seg = (p, a, b) => clamp((p - a) / (b - a));
+  const ease = t => t * t * (3 - 2 * t);
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  function focusPoint() {
+    // центр найденной строки в координатах камеры (без учёта трансформаций)
+    const y = book.offsetTop + target.offsetTop + xrows.offsetTop + found.offsetTop + found.offsetHeight / 2
+              + parseFloat(getComputedStyle(target).paddingTop) * 0;
+    const x = book.offsetLeft + target.offsetLeft + target.offsetWidth / 2;
+    return { x, y };
+  }
+
+  function render(p) {
+    const open = ease(seg(p, .04, .26));
+    book.style.setProperty('--open', open);
+    cover.style.setProperty('--turn', open);
+    pages.forEach((pg, i) => pg.style.setProperty('--turn', ease(seg(p, .28 + i * .09, .40 + i * .09))));
+    book.style.setProperty('--tilt', (18 * (1 - ease(seg(p, .50, .66)))).toFixed(2) + 'deg');
+
+    const z = ease(seg(p, .66, .80));
+    const mobile = innerWidth < 760;
+    const S = 1 + z * (mobile ? .95 : 1.35);
+    const P = focusPoint();
+    const T = { x: innerWidth / 2, y: hero.querySelector('.x-sticky').clientHeight * (mobile ? .30 : .34) };
+    const tx = lerp(P.x, T.x, z) - P.x * S, ty = lerp(P.y, T.y, z) - P.y * S;
+    cam.style.transform = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${S.toFixed(3)})`;
+
+    // полоса поиска бежит по строкам
+    const s = seg(p, .74, .84);
+    const idx = Math.min(TARGET, Math.floor(s * (TARGET + 1)));
+    const r = rowsEls[idx];
+    scan.style.opacity = p > .74 ? 1 : 0;
+    scan.style.top = r.offsetTop + 'px'; scan.style.height = r.offsetHeight + 'px';
+    found.classList.toggle('hit', s >= 1);
+
+    const intro = open * (1 - z);
+    title.style.opacity = Math.max(.0, 1 - z).toFixed(3);
+    title.style.transform = `translateY(${((1 - open) * 18).toFixed(1)}px)`;
+    lead.style.opacity = (Math.min(1, .35 + open) * (1 - z)).toFixed(3);
+    lead.style.pointerEvents = z > .5 ? 'none' : '';
+    hint.style.opacity = (1 - seg(p, 0, .03)).toFixed(3);
+    const c = seg(p, .84, .96);
+    ftitle.style.opacity = c.toFixed(3); note.style.opacity = c.toFixed(3);
+    cards.forEach((card, i) => {
+      const ci = ease(seg(p, .84 + i * .025, .92 + i * .025));
+      card.style.opacity = ci.toFixed(3);
+      card.style.transform = `translateY(${((1 - ci) * 40).toFixed(1)}px)`;
+    });
+  }
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) {
+    hero.style.height = '100vh';
+    render(.66);
+    found.classList.add('hit');
+    return;
+  }
+  let ticking = false;
+  function onScroll() {
+    if (ticking) return; ticking = true;
+    requestAnimationFrame(() => {
+      ticking = false;
+      const rect = hero.getBoundingClientRect();
+      const total = hero.offsetHeight - innerHeight;
+      render(clamp(-rect.top / total));
+    });
+  }
+  addEventListener('scroll', onScroll, { passive: true });
+  addEventListener('resize', onScroll);
+  onScroll();
+})();
+</script>
+<script>
+  document.getElementById('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const f = e.target, st = document.getElementById('status');
+    if (!f.name.value.trim() || !f.contact.value.trim()) { st.textContent = 'Заполните имя и контакт, чтобы я могла ответить.'; return; }
+    st.textContent = 'Заявка не отправлена: форма пока демонстрационная, подключим её при запуске сайта.';
+  });
+</script>
+</body>
+</html>

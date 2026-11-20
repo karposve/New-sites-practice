@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Архивный след — поиск предков по архивам бывшего СССР</title>
+<meta name="description" content="Найду документы о ваших предках в архивах бывшего СССР: метрические книги, списки раскулаченных, дела спецпереселенцев, военные архивы. В отчёте — копия каждого документа и его архивный шифр.">
+<link rel="icon" href="../brand/logo/mark.svg" type="image/svg+xml">
+<!-- Защита: странице разрешено грузить только свои файлы; форма никуда не отправляет данные -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="stylesheet" href="../brand/tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body);
+         font-size: var(--text-base); line-height: var(--leading-body); }
+  img { max-width: 100%; }
+  a { color: var(--bordo); }
+  :focus-visible { outline: 3px solid var(--olive); outline-offset: 3px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+  p { margin: 0 0 1em; max-width: var(--measure); }
+  h1, h2, .display { font-family: var(--font-display); text-transform: uppercase; line-height: 1.04;
+                     letter-spacing: .005em; margin: 0; }
+
+  /* Черновик-баннер */
+  .draft { background: var(--ink); color: var(--paper-deep); font-size: var(--text-sm); text-align: center; padding: 6px 16px; }
+
+  /* Шапка */
+  header.top { border-bottom: 1px solid var(--kraft); }
+  header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 14px; padding-bottom: 14px; }
+  header.top img { height: 46px; width: auto; display: block; }
+  header nav { display: flex; gap: 22px; align-items: center; font-size: var(--text-sm); }
+  header nav a { color: var(--ink); text-decoration: none; }
+  header nav a:hover { color: var(--bordo); }
+  .btn { display: inline-block; background: var(--bordo); color: var(--paper); text-decoration: none; border: 0;
+         font-family: var(--font-display); font-weight: 500; font-size: 1.1rem; letter-spacing: .03em;
+         padding: 13px 24px; cursor: pointer; }
+  .btn:hover { background: #561814; }
+  header nav .btn { padding: 9px 16px; font-size: 1rem; color: var(--paper); white-space: nowrap; }
+  @media (max-width: 760px) { header nav a:not(.btn) { display: none; } header.top img { height: 38px; } }
+
+  /* Первый экран */
+  .hero { padding: 56px 0 72px; }
+  .hero .wrap { display: grid; grid-template-columns: 1fr 1.15fr; gap: 48px; align-items: center; }
+  .hero h1 { font-size: var(--text-3xl); font-weight: 700; }
+  .hero .sub { font-size: var(--text-lg); color: var(--ink-soft); margin: 22px 0 28px; line-height: 1.45; }
+  .hero .actions { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; }
+  .hero .actions a.link { color: var(--ink); }
+  @media (max-width: 900px) { .hero .wrap { grid-template-columns: 1fr; gap: 36px; } .hero { padding-top: 36px; } }
+
+  /* Метрическая книга */
+  .stage { position: relative; }
+  .book { position: relative; display: grid; grid-template-columns: 1fr 1fr; perspective: 2200px;
+          background: var(--umber); padding: 10px; box-shadow: 0 18px 40px -22px #3a2416; }
+  .page { position: relative; background: #F4EEDF; border: 1px solid #d8c8a6; padding: 16px 14px;
+          font-size: 11px; line-height: 1.3; color: #3b2f2a; min-height: 330px; overflow: hidden; }
+  .page.left { border-right: 0; box-shadow: inset -14px 0 18px -16px #6b5638; }
+  .page.right { border-left: 0; box-shadow: inset 14px 0 18px -16px #6b5638; }
+  .title-block { text-align: center; padding: 8px 0 12px; border-bottom: 1px solid #c9b48f; margin-bottom: 8px; }
+  .title-block .arms { display: block; width: 47px; height: 57px; margin: 0 auto 6px; filter: grayscale(1) contrast(1.35) brightness(.8); mix-blend-mode: multiply; opacity: .9; }
+  .seal { position: absolute; right: 10px; bottom: 6px; width: 92px; height: 92px; color: var(--bordo);
+          opacity: .62; transform: rotate(-11deg); mix-blend-mode: multiply; pointer-events: none; z-index: 2; }
+  @media (max-width: 520px) { .title-block .arms { width: 34px; height: 41px; } .seal { width: 64px; height: 64px; } }
+  .title-block b { display: block; font-family: var(--font-display); font-weight: 600; font-size: 15px; letter-spacing: .06em; color: #2a211c; }
+  .title-block span { display: block; margin-top: 3px; }
+  .grid-head, .row { display: grid; grid-template-columns: 1.6em 3.6em 1fr 1.9fr; gap: 6px; align-items: center; }
+  .grid-head { font-size: 9.5px; color: #6a5a48; border-bottom: 1px solid #c9b48f; padding-bottom: 4px; margin-bottom: 2px; }
+  .row { min-height: 31px; border-bottom: 1px solid #e3d5b8; position: relative; z-index: 1; }
+  .row svg { display: block; width: 100%; height: 18px; overflow: visible; }
+  .row .n { font-size: 10px; color: #6a5a48; }
+  .row.found .txt { font-size: 10.5px; font-style: italic; color: #2a211c; line-height: 1.25; }
+  .row.found.hit { color: var(--bordo); }
+  .row.found.hit .txt { color: var(--bordo); }
+  .flip { position: absolute; top: 10px; right: 10px; width: calc(50% - 10px); height: calc(100% - 20px);
+          transform-origin: left center; transform: rotateY(0); backface-visibility: hidden;
+          background: #F4EEDF; border: 1px solid #d8c8a6; border-left: 0; padding: 16px 14px; overflow: hidden;
+          transition: transform 1s cubic-bezier(.55,.06,.3,1); z-index: 5; }
+  .flip::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #6b563826, transparent 30%);
+                 opacity: 0; transition: opacity 1s; pointer-events: none; }
+  .flip.turned { transform: rotateY(-180deg); }
+  .flip.turned::after { opacity: 1; }
+  .scan { position: absolute; left: 0; right: 0; height: 31px; background: #6B1F1A1c;
+          border-top: 1.5px solid #6B1F1A99; border-bottom: 1.5px solid #6B1F1A99;
+          opacity: 0; transition: top .45s ease-in-out, opacity .3s; z-index: 0; pointer-events: none; }
+  .scan.on { opacity: 1; }
+  .scan.hit { background: #6B1F1A2e; }
+  .cite-tag { display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; margin-top: 16px;
+              border-left: 2px solid var(--bordo); padding: 8px 0 8px 14px;
+              opacity: 0; transform: translateY(6px); transition: opacity .6s, transform .6s; }
+  .cite-tag.show { opacity: 1; transform: none; }
+  .cite-tag b { font-family: var(--font-display); font-weight: 600; text-transform: uppercase; color: var(--bordo); letter-spacing: .03em; }
+  .cite-tag span { color: var(--ink-soft); font-size: var(--text-sm); }
+  .replay { background: none; border: 0; padding: 0; color: var(--ink-soft); font: inherit; font-size: var(--text-sm);
+            text-decoration: underline; cursor: pointer; margin-left: auto; }
+  .stage figcaption { font-size: var(--text-sm); color: var(--ink-soft); margin-top: 8px; }
+  @media (max-width: 520px) {
+    .page, .flip { padding: 10px 8px; font-size: 9px; min-height: 270px; }
+    .grid-head, .row { grid-template-columns: 1.2em 2.6em 1fr; }
+    .grid-head .c4, .row > :nth-child(4) { display: none; }
+    .row.found .txt { font-size: 9px; }
+    .title-block b { font-size: 12px; }
+  }
+
+  /* Разделы с ярлыком папки */
+  section.block { padding: 64px 0; }
+  .tab { border-bottom: 4px solid var(--kraft); margin-bottom: 32px; }
+  .tab h2 { display: inline-block; font-size: var(--text-xl); font-weight: 600; background: var(--kraft); color: var(--ink);
+            padding: .4em 1.6em .3em .7em; clip-path: polygon(0 0, calc(100% - 1em) 0, 100% 100%, 0 100%); }
+  .intro { color: var(--ink-soft); margin-bottom: 28px; }
+
+  /* Книга учёта со строкой шифра */
+  .ledger { border-top: 1px solid var(--kraft); }
+  .ledger.two { display: grid; grid-template-columns: 1fr 1fr; column-gap: 40px; border-top: 0; }
+  .ledger.two .item:nth-child(-n+2) { border-top: 1px solid var(--kraft); }
+  @media (max-width: 760px) { .ledger.two { grid-template-columns: 1fr; } .ledger.two .item:nth-child(2) { border-top: 0; } }
+  .item { padding: 16px 0 16px 18px; border-bottom: 1px solid var(--kraft); border-left: 2px solid var(--bordo); }
+  .item h3 { font-size: var(--text-base); margin: 0; }
+  .item p { margin: 3px 0 0; color: var(--ink-soft); }
+  .item .cite { color: var(--bordo); font-size: var(--text-sm); margin-top: 7px; }
+
+  /* Шаги */
+  .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px; counter-reset: s; }
+  .steps li { counter-increment: s; border-top: 1px solid var(--kraft); padding-top: 14px; }
+  .steps li::before { content: counter(s); display: block; font-family: var(--font-display); font-weight: 700;
+                      font-size: 3.2rem; line-height: 1; color: var(--kraft); margin-bottom: 10px; }
+  .steps h3 { margin: 0 0 6px; font-size: var(--text-base); }
+  .steps p { color: var(--ink-soft); margin: 0; }
+  .steps .when { display: block; margin-top: 8px; font-size: var(--text-sm); color: var(--bordo); }
+  @media (max-width: 900px) { .steps { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 520px) { .steps { grid-template-columns: 1fr; } }
+
+  /* Пример отчёта */
+  .report { display: grid; grid-template-columns: 1fr 1.3fr; gap: 48px; align-items: start; }
+  .sheet { background: #F7F2E6; border: 1px solid var(--kraft); padding: 28px 28px 20px; box-shadow: 8px 8px 0 var(--paper-deep); }
+  .sheet .who { font-family: var(--font-display); font-weight: 600; text-transform: uppercase; font-size: var(--text-lg); margin: 0 0 2px; }
+  .sheet .life { color: var(--ink-soft); margin-bottom: 14px; }
+  .sheet .item { border-left-width: 2px; }
+  .sheet .note { font-size: var(--text-sm); color: var(--ink-soft); margin: 16px 0 0; }
+  @media (max-width: 860px) { .report { grid-template-columns: 1fr; gap: 28px; } }
+
+  /* Цены */
+  .prices .item { display: grid; grid-template-columns: 1fr auto; gap: 8px 32px; align-items: baseline; }
+  .prices .price { font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); white-space: nowrap; }
+  .prices .item p, .prices .item .cite { grid-column: 1 / -1; }
+  .fine { font-size: var(--text-sm); color: var(--ink-soft); margin-top: 16px; }
+
+  /* Об авторе */
+  .about { display: grid; grid-template-columns: 220px 1fr; gap: 40px; align-items: start; }
+  .portrait { aspect-ratio: 4/5; background: var(--paper-deep); border: 1px dashed var(--kraft); display: grid; place-items: center;
+              color: var(--ink-soft); font-size: var(--text-sm); text-align: center; padding: 12px; }
+  @media (max-width: 640px) { .about { grid-template-columns: 1fr; } .portrait { max-width: 200px; } }
+
+  /* Вопросы */
+  details { border-bottom: 1px solid var(--kraft); padding: 14px 0; }
+  details:first-of-type { border-top: 1px solid var(--kraft); }
+  summary { cursor: pointer; font-weight: 700; list-style: none; display: flex; justify-content: space-between; gap: 16px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font-family: var(--font-display); color: var(--bordo); font-size: 1.4rem; line-height: 1; }
+  details[open] summary::after { content: "−"; }
+  details p { margin: 10px 0 0; color: var(--ink-soft); }
+
+  /* Заявка */
+  .order { background: var(--paper-deep); border-top: 4px solid var(--kraft); }
+  .order .wrap { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; }
+  .order h2 { font-size: var(--text-2xl); font-weight: 700; margin-bottom: 16px; }
+  form { display: grid; gap: 16px; }
+  label { display: grid; gap: 6px; font-weight: 700; font-size: var(--text-sm); }
+  label small { font-weight: 400; color: var(--ink-soft); }
+  input, textarea { font: inherit; font-size: var(--text-base); color: var(--ink); background: var(--paper);
+                    border: 1px solid var(--kraft); border-radius: 0; padding: 11px 12px; }
+  textarea { min-height: 140px; resize: vertical; }
+  .status { min-height: 1.5em; color: var(--olive); font-weight: 700; margin: 0; }
+  @media (max-width: 860px) { .order .wrap { grid-template-columns: 1fr; gap: 24px; } }
+
+  footer { padding: 32px 0 48px; font-size: var(--text-sm); color: var(--ink-soft); }
+  footer .wrap { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+  footer img { width: 36px; height: 36px; vertical-align: middle; margin-right: 10px; }
+</style>
+</head>
+<body>
+<!-- Фильтр для печати: делает герб одноцветным бордовым оттиском (тёмное — плотнее, светлое — прозрачнее) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="stamp-ink" color-interpolation-filters="sRGB">
+      <feColorMatrix type="matrix" values="0 0 0 0 0.42  0 0 0 0 0.12  0 0 0 0 0.10  -0.5 -0.5 -0.3 1.2 0"/>
+    </filter>
+  </defs>
+</svg>
+<div class="draft">Черновик сайта. Цены, сроки, отзывы и контакты пока заглушки.</div>
+
+<header class="top">
+  <div class="wrap">
+    <a href="#"><img src="../brand/logo/logo-a-outlined.svg" alt="Архивный след — поиск предков по архивам бывшего СССР"></a>
+    <nav aria-label="Разделы">
+      <a href="#find">Что можно найти</a>
+      <a href="#how">Как проходит поиск</a>
+      <a href="#prices">Цены</a>
+      <a href="#faq">Вопросы</a>
+      <a class="btn" href="#order">Оставить заявку</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <h1>Найду документы о ваших предках</h1>
+        <p class="sub">Метрические книги, списки раскулаченных, дела спецпереселенцев и военные архивы бывшего СССР. В отчёте — копия каждого найденного документа и точный адрес, где он хранится.</p>
+        <div class="actions">
+          <a class="btn" href="#order">Оставить заявку</a>
+          <a class="link" href="#report">Посмотреть пример отчёта</a>
+        </div>
+      </div>
+
+      <figure class="stage" style="margin:0" aria-label="Анимация: поиск записи о крещении в метрической книге 1911 года">
+        <div class="book" id="book">
+          <div class="page left">
+            <div class="title-block">
+              <img class="arms" src="img/lesser-coat-of-arms-russian-empire.svg" alt="" width="47" height="57">
+              <b>МЕТРИЧЕСКАЯ КНИГА</b>
+              <span>Покровской церкви села Покровскаго</span>
+              <span>Новоузенскаго уѣзда Самарской губернiи</span>
+              <span>на 1911 годъ. Часть первая: о родившихся</span>
+            </div>
+            <div class="rows" data-rows="6" data-start="41"></div>
+          </div>
+          <div class="page right" id="target-page">
+            <div class="grid-head"><span>№</span><span>Мѣсяцъ и день</span><span>Имя родившагося</span><span class="c4">Званiе, имя, отчество и фамилiя родителей</span></div>
+            <div class="rows" id="target-rows">
+              <div class="scan" id="scan"></div>
+            </div>
+            <svg class="seal" viewBox="0 0 120 120" aria-hidden="true">
+              <defs><path id="seal-ring" d="M60 60 m-44 0 a44 44 0 1 1 88 0 a44 44 0 1 1 -88 0"/></defs>
+              <circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="2.5"/>
+              <circle cx="60" cy="60" r="35" fill="none" stroke="currentColor" stroke-width="1.2"/>
+              <text font-size="10.5" letter-spacing="1.2" fill="currentColor" font-family="PT Sans, Arial, sans-serif">
+                <textPath href="#seal-ring" startOffset="2%">САМАРСКАЯ ДУХОВНАЯ КОНСИСТОРIЯ ✠</textPath>
+              </text>
+              <image href="img/lesser-coat-of-arms-russian-empire.svg" x="38" y="32" width="44" height="53" filter="url(#stamp-ink)"/>
+            </svg>
+          </div>
+          <div class="flip" data-start="65"><div class="grid-head"><span>№</span><span>Мѣсяцъ и день</span><span>Имя</span><span class="c4">Родители</span></div><div class="rows" data-rows="9" data-start="65"></div></div>
+          <div class="flip" data-start="56"><div class="grid-head"><span>№</span><span>Мѣсяцъ и день</span><span>Имя</span><span class="c4">Родители</span></div><div class="rows" data-rows="9" data-start="56"></div></div>
+          <div class="flip" data-start="47"><div class="grid-head"><span>№</span><span>Мѣсяцъ и день</span><span>Имя</span><span class="c4">Родители</span></div><div class="rows" data-rows="9" data-start="47"></div></div>
+        </div>
+        <div class="cite-tag" id="cite" aria-live="polite">
+          <b>Найдено</b>
+          <span>Крещение Иоанна Лаврентьева, 14 мая 1911. ЦГАСО, ф. 32, оп. 36, д. 218, л. 112 об.</span>
+          <button class="replay" id="replay" type="button">Показать ещё раз</button>
+        </div>
+        <figcaption>Пример: имена и шифр выдуманы для демонстрации.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="block" id="find">
+    <div class="wrap">
+      <div class="tab"><h2>Что можно найти</h2></div>
+      <p class="intro">Большая часть документов о простых семьях XX века сохранилась. Вопрос в том, в каком архиве они лежат и кому их выдадут.</p>
+      <div class="ledger two">
+        <div class="item"><h3>Рождение, брак, смерть до 1918 года</h3><p>Метрические книги церквей: имена родителей, крёстных, село и сословие.</p><p class="cite">Областные архивы, фонды духовных консисторий</p></div>
+        <div class="item"><h3>Раскулачивание и высылка</h3><p>Списки раскулаченных по сельсоветам, акты описи имущества, решения исполкомов.</p><p class="cite">Областные архивы, фонды райисполкомов 1929–1933</p></div>
+        <div class="item"><h3>Жизнь в спецпоселении</h3><p>Учётные карточки спецпереселенцев: состав семьи, перемещения, дата снятия с учёта.</p><p class="cite">Информационные центры МВД по месту ссылки</p></div>
+        <div class="item"><h3>Арест и следственное дело</h3><p>Если предок был осуждён, дело хранится в архиве ФСБ или передано в областной архив.</p><p class="cite">Архивы УФСБ, часть дел — в госархивах регионов</p></div>
+        <div class="item"><h3>Война 1941–1945</h3><p>Призыв, награды, ранения, гибель или возвращение домой.</p><p class="cite">Онлайн-базы Минобороны и ЦАМО</p></div>
+        <div class="item"><h3>Ревизские сказки и переписи</h3><p>Состав крестьянских семей в XVIII–XIX веках, если линию удаётся продолжить в глубину.</p><p class="cite">Областные архивы, фонды казённых палат</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="how">
+    <div class="wrap">
+      <div class="tab"><h2>Как проходит поиск</h2></div>
+      <ol class="steps">
+        <li><h3>Вы рассказываете, что знаете</h3><p>Имена, годы, сёла, семейные истории. Даже обрывки помогают выбрать архив.</p><span class="when">Бесплатный разговор, 30 минут</span></li>
+        <li><h3>Я проверяю открытые базы</h3><p>Оцифрованные метрики, базы жертв репрессий, военные базы, книги памяти.</p><span class="when">5–10 дней</span></li>
+        <li><h3>Готовлю запросы в архивы</h3><p>Часть документов выдают только родственникам. Я пишу запросы, вы их подписываете и отправляете.</p><span class="when">Ответ архива — до 30 дней</span></li>
+        <li><h3>Вы получаете отчёт</h3><p>Личная страница или PDF: что найдено, копии документов, шифры и что искать дальше.</p><span class="when">После ответов архивов</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="block" id="report">
+    <div class="wrap report">
+      <div>
+        <div class="tab"><h2>Пример отчёта</h2></div>
+        <p>У каждой находки есть шифр: название архива, номер фонда, описи, дела и листа. По нему вы или любой исследователь заново найдёте этот документ.</p>
+        <p>Если что-то не нашлось, в отчёте сказано, где искали и куда можно обратиться дальше.</p>
+      </div>
+      <article class="sheet" aria-label="Фрагмент отчёта">
+        <p class="who">Лаврентьев Степан Иванович</p>
+        <p class="life">ок. 1886, с. Покровское Самарской губ. — после 1940</p>
+        <div class="ledger">
+          <div class="item"><h3>Венчание, 1909</h3><p>С Марией Васильевной Ковалёвой, крестьянской девицей того же села.</p><p class="cite">ЦГАСО, ф. 32, оп. 36, д. 201, л. 87 об.</p></div>
+          <div class="item"><h3>Раскулачен, 1930</h3><p>Отнесён ко второй категории, хозяйство передано колхозу «Красный пахарь».</p><p class="cite">ГАСО, ф. Р-2475, оп. 1, д. 14, л. 33</p></div>
+          <div class="item"><h3>Спецпоселение, 1930–1940</h3><p>Выслан с семьёй из пяти человек в Котласский район Северного края.</p><p class="cite">ИЦ УМВД по Архангельской обл., ответ на запрос</p></div>
+        </div>
+        <p class="note">Все имена и шифры в примере выдуманы.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="block" id="prices">
+    <div class="wrap">
+      <div class="tab"><h2>Цены</h2></div>
+      <div class="ledger prices">
+        <div class="item"><h3>Первый шаг</h3><span class="price">4 900 ₽</span><p>Проверка открытых баз по одному человеку и план: какие архивы и запросы нужны.</p><p class="cite">Срок 7 дней</p></div>
+        <div class="item"><h3>Одна линия рода</h3><span class="price">14 900 ₽</span><p>Поиск по одной фамилии на 3–4 поколения вглубь, тексты запросов в архивы, отчёт с копиями.</p><p class="cite">Срок 4–8 недель, включая ответы архивов</p></div>
+        <div class="item"><h3>Родословная семьи</h3><span class="price">от 35 000 ₽</span><p>Несколько линий, древо в формате GEDCOM, личная страница семьи со всеми документами.</p><p class="cite">Срок от 2 месяцев</p></div>
+      </div>
+      <p class="fine">Архивы берут свою плату за копии и справки, обычно до 1 500 ₽ за документ. Её вы оплачиваете архиву напрямую.</p>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap about">
+      <div class="portrait">Здесь будет фотография</div>
+      <div>
+        <div class="tab"><h2>Кто ищет</h2></div>
+        <p>Меня зовут Светлана. Я начала с поиска собственной семьи: прадеда, высланного на Север в 1930 году, и деда, вернувшегося с войны. За это время научилась читать дореволюционные метрики, разбираться в архивных фондах и писать запросы, на которые архивы отвечают по существу.</p>
+        <p>Работаю удалённо, с семьями из любой страны.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="faq">
+    <div class="wrap">
+      <div class="tab"><h2>Вопросы</h2></div>
+      <details><summary>Что, если я почти ничего не знаю о предках?</summary><p>Достаточно одного имени с примерным годом рождения и области. Часто остальное находится в документах родителей или в семейных справках.</p></details>
+      <details><summary>Почему запросы в архив отправляю я, а не вы?</summary><p>Многие архивы выдают документы о репрессированных только родственникам. Я готовлю текст запроса и список приложений, вам остаётся подписать и отправить.</p></details>
+      <details><summary>Можно ли найти документы, если село исчезло?</summary><p>Да. Документы хранятся по старому административному делению: уезду и губернии. Я определяю, в какой архив перешли фонды.</p></details>
+      <details><summary>Вы передаёте мои данные куда-то ещё?</summary><p>Нет. Сведения о живых родственниках для поиска не нужны, я их не собираю и не ввожу в онлайн-базы.</p></details>
+      <details><summary>Что если ничего не найдётся?</summary><p>В отчёте будет список проверенных источников и следующий шаг. Если открытые базы пусты, «Первый шаг» всё равно даёт план поиска.</p></details>
+    </div>
+  </section>
+
+  <section class="block order" id="order">
+    <div class="wrap">
+      <div>
+        <h2>Расскажите о своей семье</h2>
+        <p>Я отвечу в течение двух дней и скажу, с какого архива стоит начать.</p>
+        <p class="fine">Telegram и почта появятся при запуске сайта.</p>
+      </div>
+      <form id="form" novalidate>
+        <label>Как к вам обращаться<input name="name" autocomplete="given-name" required></label>
+        <label>Телефон или Telegram<input name="contact" required></label>
+        <label>Что вы знаете о предках <small>Имена, годы, сёла, истории. Сведения о живых родственниках не нужны.</small><textarea name="about"></textarea></label>
+        <div><button class="btn" type="submit">Отправить заявку</button></div>
+        <p class="status" id="status" role="status"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span><img src="../brand/logo/mark.svg" alt="">Архивный след, 2026</span>
+    <span>Самозанятая, ИНН 000000000000 (заглушка)</span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  // Рукописные строки: случайные петли чернилами
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  // W — примерная ширина колонки в пикселях, чтобы почерк не сжимался
+  function scribble(W, fill) {
+    const w = W * fill; let d = `M0 ${rnd(10,12).toFixed(1)}`; let x = 0;
+    while (x < w) {
+      const step = rnd(4.5, 8), up = rnd(4, 8.5), down = rnd(1.5, 3.5);
+      d += ` c${(step*.25).toFixed(1)} ${(-up).toFixed(1)} ${(step*.75).toFixed(1)} ${(-up).toFixed(1)} ${(step*.55).toFixed(1)} 0`;
+      d += ` c${(step*.1).toFixed(1)} ${down.toFixed(1)} ${(step*.45).toFixed(1)} ${down.toFixed(1)} ${(step*.45).toFixed(1)} 0`;
+      x += step;
+      if (Math.random() < .16) { const gap = rnd(4, 8); x += gap; d += ` m${gap.toFixed(1)} 0`; }
+    }
+    return `<svg viewBox="0 0 ${W} 18" preserveAspectRatio="xMinYMid meet" aria-hidden="true"><path d="${d}" fill="none" stroke="#3b2f2a" stroke-opacity=".8" stroke-width="1.15"/></svg>`;
+  }
+  function row(n) {
+    return `<div class="row"><span class="n">${n}</span>${scribble(38, rnd(.55,.85))}${scribble(42, rnd(.6,.95))}${scribble(80, rnd(.75,.98))}</div>`;
+  }
+  document.querySelectorAll('.rows[data-rows]').forEach(el => {
+    const start = +el.dataset.start; let html = '';
+    for (let i = 0; i < +el.dataset.rows; i++) html += row(start + i);
+    el.insertAdjacentHTML('beforeend', html);
+  });
+
+  // Целевая страница: 9 строк, нужная — седьмая
+  const target = document.getElementById('target-rows');
+  const TARGET = 6; let html = '';
+  for (let i = 0; i < 9; i++) {
+    const n = 74 + i;
+    if (i === TARGET) {
+      html += `<div class="row found" id="found"><span class="n">${n}</span><span class="txt">14 мая</span><span class="txt">Iоаннъ</span><span class="txt">Крест. Степанъ Ивановъ Лаврентьевъ и жена его Марiя Васильевна</span></div>`;
+    } else html += row(n);
+  }
+  target.insertAdjacentHTML('beforeend', html);
+
+  const flips = [...document.querySelectorAll('.flip')];
+  const scan = document.getElementById('scan');
+  const rows = [...target.querySelectorAll('.row')];
+  const found = document.getElementById('found');
+  const cite = document.getElementById('cite');
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let run = 0;
+
+  const place = r => { scan.style.top = r.offsetTop + 'px'; scan.style.height = r.offsetHeight + 'px'; };
+  function reset() {
+    flips.forEach(f => { f.style.transition = 'none'; f.classList.remove('turned'); void f.offsetWidth; f.style.transition = ''; });
+    scan.className = 'scan'; place(rows[0]);
+    found.classList.remove('hit'); cite.classList.remove('show');
+  }
+  function finalState() {
+    flips.forEach(f => f.classList.add('turned'));
+    place(found); scan.className = 'scan on hit';
+    found.classList.add('hit'); cite.classList.add('show');
+  }
+  async function play() {
+    const id = ++run; reset();
+    if (reduce) { finalState(); return; }
+    await sleep(700);
+    for (let i = flips.length - 1; i >= 0; i--) {   // верхняя страница листается первой
+      if (id !== run) return; flips[i].classList.add('turned'); await sleep(650);
+    }
+    await sleep(500); if (id !== run) return;
+    place(rows[0]); scan.classList.add('on');
+    for (let i = 0; i <= TARGET; i++) {
+      if (id !== run) return; place(rows[i]); await sleep(i === 0 ? 400 : 480);
+    }
+    scan.classList.add('hit'); found.classList.add('hit'); await sleep(450);
+    if (id !== run) return; cite.classList.add('show');
+  }
+  document.getElementById('replay').addEventListener('click', play);
+  addEventListener('resize', () => { if (scan.classList.contains('on')) place(found.classList.contains('hit') ? found : rows[0]); });
+  // Запуск, когда книга видна на экране (на телефоне она ниже заголовка)
+  reset();
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); play(); } }, { threshold: .55 });
+    io.observe(document.getElementById('book'));
+  } else play();
+
+  // Форма-заглушка
+  document.getElementById('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const f = e.target;
+    if (!f.name.value.trim() || !f.contact.value.trim()) {
+      document.getElementById('status').textContent = 'Заполните имя и контакт, чтобы я могла ответить.'; return;
+    }
+    document.getElementById('status').textContent = 'Заявка не отправлена: форма пока демонстрационная, подключим её при запуске сайта.';
+  });
+})();
+</script>
+</body>
+</html>
