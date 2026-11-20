@@ -152,6 +152,13 @@
   .sheet .life { color: var(--ink-soft); margin-bottom: 14px; }
   .sheet .item { border-left-width: 2px; }
   .sheet .note { font-size: var(--text-sm); color: var(--ink-soft); margin: 16px 0 0; }
+  /* Доказательства у каждой находки: приложенный скан и ссылка на оцифрованное дело */
+  .item .proof { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 9px; font-size: var(--text-sm); }
+  .proof span { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
+  .proof .copy::before { content: ""; flex: none; width: 11px; height: 14px; border: 1px solid #a88c62;
+                         background: #fffdf8 repeating-linear-gradient(180deg, transparent 0 3px, #c9b48f 3px 4px) 2px 3px / 6px 8px no-repeat;
+                         box-shadow: 2px 2px 0 var(--paper-deep); }
+  .proof .online { color: var(--bordo); text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 3px; }
   @media (max-width: 860px) { .report { grid-template-columns: 1fr; gap: 28px; } }
 
   /* Цены */
@@ -328,18 +335,22 @@
     <div class="wrap report">
       <div>
         <div class="tab"><h2>Пример отчёта</h2></div>
-        <p>У каждой находки есть шифр: название архива, номер фонда, описи, дела и листа. По нему вы или любой исследователь заново найдёте этот документ.</p>
+        <p>Каждая строка отчёта опирается на документ, и этот документ вы видите сами. К каждой находке приложен скан или фотокопия листа, которую выдал архив. Нет документа — нет записи в отчёте.</p>
+        <p>У каждой находки есть шифр: название архива, номер фонда, описи, дела и листа. Если архив оцифровал дело и выложил его в интернет, рядом стоит ссылка на страницу архива: вы откроете лист без меня и сверите каждое слово.</p>
         <p>Если что-то не нашлось, в отчёте сказано, где искали и куда можно обратиться дальше.</p>
       </div>
       <article class="sheet" aria-label="Фрагмент отчёта">
         <p class="who">Лаврентьев Степан Иванович</p>
         <p class="life">ок. 1886, с. Покровское Самарской губ. — после 1940</p>
         <div class="ledger">
-          <div class="item"><h3>Венчание, 1909</h3><p>С Марией Васильевной Ковалёвой, крестьянской девицей того же села.</p><p class="cite">ЦГАСО, ф. 32, оп. 36, д. 201, л. 87 об.</p></div>
-          <div class="item"><h3>Раскулачен, 1930</h3><p>Отнесён ко второй категории, хозяйство передано колхозу «Красный пахарь».</p><p class="cite">ГАСО, ф. Р-2475, оп. 1, д. 14, л. 33</p></div>
-          <div class="item"><h3>Спецпоселение, 1930–1940</h3><p>Выслан с семьёй из пяти человек в Котласский район Северного края.</p><p class="cite">ИЦ УМВД по Архангельской обл., ответ на запрос</p></div>
+          <div class="item"><h3>Венчание, 1909</h3><p>С Марией Васильевной Ковалёвой, крестьянской девицей того же села.</p><p class="cite">ЦГАСО, ф. 32, оп. 36, д. 201, л. 87 об.</p>
+            <p class="proof"><span class="copy">Скан листа 87 об.</span><span class="online">Дело на сайте архива</span></p></div>
+          <div class="item"><h3>Раскулачен, 1930</h3><p>Отнесён ко второй категории, хозяйство передано колхозу «Красный пахарь».</p><p class="cite">ГАСО, ф. Р-2475, оп. 1, д. 14, л. 33</p>
+            <p class="proof"><span class="copy">Архивная копия листа 33</span></p></div>
+          <div class="item"><h3>Спецпоселение, 1930–1940</h3><p>Выслан с семьёй из пяти человек в Котласский район Северного края.</p><p class="cite">ИЦ УМВД по Архангельской обл., ответ на запрос</p>
+            <p class="proof"><span class="copy">Скан ответа ИЦ, 2 листа</span></p></div>
         </div>
-        <p class="note">Все имена и шифры в примере выдуманы.</p>
+        <p class="note">Все имена и шифры в примере выдуманы, поэтому ссылка не открывается. В настоящем отчёте она ведёт на страницу архива.</p>
       </article>
     </div>
   </section>
