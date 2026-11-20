@@ -6,14 +6,11 @@
 <title>Архивный след — поиск предков по архивам бывшего СССР (версия 3)</title>
 <meta name="description" content="Найду документы о ваших предках в архивах бывшего СССР: метрические книги, списки раскулаченных, дела спецпереселенцев, военные архивы. В отчёте — копия каждого документа и его архивный шифр.">
 <link rel="icon" href="../brand/logo/mark.svg" type="image/svg+xml">
-<!-- Защита: странице разрешено грузить только свои файлы и шрифты Google; форма никуда не отправляет данные -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<!-- Защита: странице разрешено грузить только свои файлы; форма никуда не отправляет данные -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
+<!-- Все шрифты, включая рукописный Bad Script, подключаются из ../brand/fonts через tokens.css -->
 <link rel="stylesheet" href="../brand/tokens.css">
-<!-- Рукописный шрифт для записей в метрической книге: есть буквы ѣ, і, ѳ -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bad+Script&display=swap">
 <style>
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
@@ -420,7 +417,7 @@
 
   const ROWS = 10;
   function pageHTML(k) {
-    if (k === 0) return `<div class="b3-ttl"><img src="img/lesser-coat-of-arms-russian-empire.svg" alt=""><b>МЕТРИЧЕСКАЯ КНИГА</b><span>Покровской церкви села Покровскаго</span><span>Новоузенскаго уѣзда Самарской губерніи</span><span>на 1911 годъ</span><i>Часть первая: о родившихся</i></div>`;
+    if (k === 0) return `<div class="b3-ttl"><img src="img/lesser-coat-of-arms-russian-empire.webp" alt=""><b>МЕТРИЧЕСКАЯ КНИГА</b><span>Покровской церкви села Покровскаго</span><span>Новоузенскаго уѣзда Самарской губерніи</span><span>на 1911 годъ</span><i>Часть первая: о родившихся</i></div>`;
     const start = (k - 1) * ROWS + 1;
     let h = `<div class="b3-runhead">Часть первая: о родившихся</div>${head}`;
     for (let i = 0; i < ROWS; i++) h += row(start + i);
